@@ -29,7 +29,7 @@ func routes(_ app: Application) throws {
 		"wace server is healthy"
 	}
 
-	app.post("increment") { _ async throws -> String in
+	app.get("increment") { _ async -> String in
 		var vc = await CounterStore.load()
 		vc.count += 1
 		await CounterStore.save(vc)
