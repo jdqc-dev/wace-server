@@ -6,7 +6,7 @@ struct VisitorCount: Codable {
 
 @MainActor
 struct CounterStore {
-	static let path = "/var/lib/vapor/visitorCount.json"
+	static let path = "/tmp/wace-server/visitorCount.json"
 	@MainActor static let fm = FileManager.default
 
 	static func load() -> VisitorCount {
