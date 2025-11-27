@@ -40,13 +40,15 @@ func routes(_ app: Application) throws {
 		"wace server is healthy"
 	}
 
-	app.get("increment") { _ async -> String in
+	// Use POST for increment
+	app.post("increment") { _ async -> String in
 		var vc = await CounterStore.load(app: app)
 		vc.count += 1
 		await CounterStore.save(vc, app: app)
 		return String(vc.count)
 	}
 
+	// Use GET for fetching visitors
 	app.get("visitors") { _ async -> String in
 		let vc = await CounterStore.load(app: app)
 		return String(vc.count)
