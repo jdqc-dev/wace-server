@@ -21,20 +21,23 @@ struct CounterStore {
 }
 
 func routes(_ app: Application) throws {
-    app.get { req async in
-        "wace server is healthy!"
-    }
+	app.get { _ async in
+		"wace server is healthy!"
+	}
 
-    app.get("health") { req async -> String in
-        "wace server is healthy"
-    }
+	app.get("health") { _ async -> String in
+		"wace server is healthy"
+	}
 
-	app.post("increment") { req async throws -> String in
+	app.post("increment") { _ async throws -> String in
 		var vc = await CounterStore.load()
 		vc.count += 1
 		await CounterStore.save(vc)
 		return String(vc.count)
 	}
 
-
+	app.get("visitors") { _ async -> String in
+		let vc = await CounterStore.load()
+		return String(vc.count)
+	}
 }
