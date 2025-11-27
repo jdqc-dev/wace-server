@@ -6,17 +6,28 @@ struct VisitorCount: Codable {
 
 @MainActor
 struct CounterStore {
-	static let path = "/tmp/wace-server/visitorCount.json"
-	@MainActor static let fm = FileManager.default
+	static let filename = "visitorCount.json"
 
-	static func load() -> VisitorCount {
-		guard let data = fm.contents(atPath: path) else { return .init(count: 0) }
+	static func path(for app: Application) -> String {
+		return app.directory.workingDirectory + filename
+	}
+
+	static func load(app: Application) -> VisitorCount {
+		let filePath = path(for: app)
+		guard let data = FileManager.default.contents(atPath: filePath) else {
+			return .init(count: 0)
+		}
 		return (try? JSONDecoder().decode(VisitorCount.self, from: data)) ?? .init(count: 0)
 	}
 
-	static func save(_ vc: VisitorCount) {
-		let data = try! JSONEncoder().encode(vc)
-		try! data.write(to: URL(fileURLWithPath: path), options: .atomic)
+	static func save(_ vc: VisitorCount, app: Application) {
+		let filePath = path(for: app)
+		do {
+			let data = try JSONEncoder().encode(vc)
+			try data.write(to: URL(fileURLWithPath: filePath), options: .atomic)
+		} catch {
+			print("Failed to save visitor count:", error)
+		}
 	}
 }
 
@@ -30,14 +41,14 @@ func routes(_ app: Application) throws {
 	}
 
 	app.get("increment") { _ async -> String in
-		var vc = await CounterStore.load()
+		var vc = await CounterStore.load(app: app)
 		vc.count += 1
-		await CounterStore.save(vc)
+		await CounterStore.save(vc, app: app)
 		return String(vc.count)
 	}
 
 	app.get("visitors") { _ async -> String in
-		let vc = await CounterStore.load()
+		let vc = await CounterStore.load(app: app)
 		return String(vc.count)
 	}
 }
