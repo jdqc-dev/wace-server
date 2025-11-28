@@ -2,6 +2,7 @@ import Vapor
 
 struct VisitorCount: Codable {
 	var count: Int
+	var downloads: Int
 }
 
 @MainActor
@@ -15,9 +16,9 @@ struct CounterStore {
 	static func load(app: Application) -> VisitorCount {
 		let filePath = path(for: app)
 		guard let data = FileManager.default.contents(atPath: filePath) else {
-			return .init(count: 0)
+			return .init(count: 0, downloads: 0)
 		}
-		return (try? JSONDecoder().decode(VisitorCount.self, from: data)) ?? .init(count: 0)
+		return (try? JSONDecoder().decode(VisitorCount.self, from: data)) ?? .init(count: 0, downloads: 0)
 	}
 
 	static func save(_ vc: VisitorCount, app: Application) {
@@ -40,7 +41,7 @@ func routes(_ app: Application) throws {
 		"wace server is healthy"
 	}
 
-	// Use POST for increment
+	// Increment visitors
 	app.post("increment") { _ async -> String in
 		var vc = await CounterStore.load(app: app)
 		vc.count += 1
@@ -48,9 +49,23 @@ func routes(_ app: Application) throws {
 		return String(vc.count)
 	}
 
-	// Use GET for fetching visitors
+	// Fetch visitor count
 	app.get("visitors") { _ async -> String in
 		let vc = await CounterStore.load(app: app)
 		return String(vc.count)
+	}
+
+	// Increment downloads
+	app.post("downloaded") { _ async -> String in
+		var vc = await CounterStore.load(app: app)
+		vc.downloads += 1
+		await CounterStore.save(vc, app: app)
+		return String(vc.downloads)
+	}
+
+	// Fetch download count
+	app.get("downloads") { _ async -> String in
+		let vc = await CounterStore.load(app: app)
+		return String(vc.downloads)
 	}
 }
